@@ -50,7 +50,9 @@ or
   yarn add
 ```
 
-3. Start the server(If you are **NOT** using the stable version)
+## How to run application in _dev_ mode?
+
+1. Start the application in dev mode
 
 ```bash
   npm run dev
@@ -62,7 +64,21 @@ or
   yarn dev
 ```
 
-4. Start the server(If you are using the stable version)
+## How to run application in _preview_ mode?
+
+1. Build the application
+
+```bash
+  npm run build
+```
+
+or 
+
+```bash
+  yarn build
+```
+
+2. Start the application in preview mode
 
 ```bash
   npm run preview
@@ -74,7 +90,7 @@ or
   yarn preview
 ```
 
-Done! Go to http://localhost:5173 **(DEV)** or http://localhost:4173 **(PREVIEW)** and you can start using the application locally
+Done! Go to http://localhost:5173 **(DEV)** or http://localhost:4173 **(PREVIEW)** and you can start using the application locally!
 
 ## Author
 

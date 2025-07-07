@@ -1,12 +1,51 @@
-# React + Vite
+# 🪶 Notewormy
+A modern and as minimalistic as possible web application for keeping records of all kinds, using Markdown to format these records in a convenient format. It is designed for those who appreciate a clean borderless interface and maximum focus on content. The application runs completely client-side and does not require connection to any server. All your notes are stored in your browser's `localStorage`.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+![image](https://github.com/user-attachments/assets/28284cf4-d9ac-4432-a4f3-60cbc02d119a)
 
-Currently, two official plugins are available:
+> Markdown note-taking app built with React and [MDXEditor](https://mdxeditor.dev/).
+> Minimalist. Functional. User-friendly.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## Expanding the ESLint configuration
+## Main Features
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- Rich Markdown editing via **MDXEditor**
+- All notes saved to `localStorage`
+- Multiple note support with user-created titles and descriptions
+- Beautiful dark-themed UI
+- Undo/redo, lists, tables, code blocks, images, quotes, and more
+- Fully client-side — your notes stay private
+
+---
+
+## Tech Stack
+
+- **React** + Hooks (`useState`, `useEffect`, `useCallback`)
+- **MDXEditor** plugins:  
+  `headings`, `lists`, `quote`, `codeBlock`, `toolbar`, `image`, `link`, and more
+- **Tailwind CSS**
+- **React Icons** (`react-icons/fa`, `react-icons/md`)
+- Local storage for persistence
+
+---
+
+## Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com//advre617/markdown-notepad.git
+   cd markdown-notepad
+  ```
+2. Install dependencies:
+  ```bash
+   npm install
+  ```
+3. Start the app:
+  ```bash
+   npm start
+  ```
+
+## Author
+
+- [@advre617](https://github.com/advre617)

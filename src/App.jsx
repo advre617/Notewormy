@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   MDXEditor,
   headingsPlugin,
@@ -23,10 +23,163 @@ import {
   InsertTable,
   InsertImage,
   InsertThematicBreak
-} from '@mdxeditor/editor'
-import '@mdxeditor/editor/style.css'
-import './App.css'
-import { FaTrash, FaSave } from 'react-icons/fa'
+} from '@mdxeditor/editor';
+import '@mdxeditor/editor/style.css';
+import './App.css';
+import { FaTrash, FaSave, FaFeatherAlt, FaHeart } from 'react-icons/fa';
+import { MdOutlinePlaylistAdd } from "react-icons/md";
+
+
+// color palette for the app (dark theme)
+const palette = {
+  darkBg: '#222831',
+  mediumBg: '#393E46',
+  accent: '#00ADB5',
+  text: '#EEEEEE',
+  danger: '#FF6B6B'
+};
+
+const styles = {
+  appBackground: {
+    backgroundColor: palette.darkBg,
+    minHeight: '100vh',
+    padding: '2rem',
+    color: palette.text,
+    fontFamily: "'Nunito', sans-serif"
+  },
+  header: {
+    textAlign: 'center',
+    marginBottom: '2.5rem',
+  },
+  headerTitle: {
+    color: palette.accent,
+    fontWeight: 'bold',
+    fontSize: '3rem',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '1rem'
+  },
+  headerSubtitle: {
+    color: palette.text,
+    opacity: 0.7,
+    fontSize: '1.125rem'
+  },
+  container: {
+    display: 'flex',
+    flexDirection: 'row',
+    gap: '2rem',
+    width: '100%',
+    maxWidth: '1400px',
+    height: 'calc(100vh - 180px)'
+  },
+  notesListContainer: {
+    backgroundColor: palette.mediumBg,
+    borderRadius: '16px',
+    width: '100%',
+    maxWidth: '380px',
+    boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden'
+  },
+  notesListWrapper: {
+    padding: '1.5rem',
+    display: 'flex',
+    flexDirection: 'column',
+    flex: 1,
+    overflow: 'hidden'
+  },
+  notesListHeader: {
+    color: palette.text,
+    fontWeight: 'bold',
+    fontSize: '1.5rem',
+  },
+  editorContainer: {
+    backgroundColor: palette.mediumBg,
+    borderRadius: '16px',
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
+    maxHeight: '100%',
+    overflow: 'hidden'
+  },
+  noteItem: {
+    padding: '1rem 1.25rem',
+    border: `2px solid transparent`,
+    borderColor: 'transparent',
+    borderRadius: '12px',
+    marginBottom: '0.75rem',
+    cursor: 'pointer',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    transition: 'all 0.2s ease-in-out',
+  },
+  activeNote: {
+    backgroundColor: 'rgba(0, 173, 181, 0.15)',
+    borderColor: palette.accent,
+    transform: 'scale(1.02)',
+  },
+  noteTitle: {
+    fontWeight: '600',
+    fontSize: '1.1rem',
+    color: palette.text,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap'
+  },
+  noteDescription: {
+    color: palette.text,
+    opacity: 0.6,
+    fontSize: '0.875rem'
+  },
+  noteDate: {
+    color: palette.text,
+    opacity: 0.4,
+    fontSize: '0.75rem',
+    marginTop: '0.5rem'
+  },
+  button: {
+    backgroundColor: palette.accent,
+    color: palette.darkBg,
+    border: 'none',
+    padding: '0.75rem 1.25rem',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+    fontWeight: 'bold',
+    transition: 'all 0.2s ease',
+  },
+  deleteButton: {
+    color: palette.text,
+    opacity: 0.5,
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    padding: '0.5rem',
+    borderRadius: '50%',
+    transition: 'all 0.2s ease',
+  },
+  inputField: {
+    width: '100%',
+    padding: '0.35rem',
+    border: `1px solid ${palette.accent}`,
+    borderRadius: '4px',
+    backgroundColor: palette.darkBg,
+    color: palette.text,
+    fontSize: '1rem'
+  },
+  footer: {
+    marginTop: '2.5rem',
+    color: palette.text,
+    textAlign: 'center',
+    opacity: '0.5'
+  }
+};
+
+
 
 function App() {
   const [notesList, setNotesList] = useState([]);
@@ -34,47 +187,38 @@ function App() {
   const [editingNoteId, setEditingNoteId] = useState(null);
   const [editingField, setEditingField] = useState(null);
   const [editValue, setEditValue] = useState('');
-  const [markdownContent, setMarkdownContent] = useState(`# Welcome to the Markdown editor!
+  const [markdownContent, setMarkdownContent] = useState(
+    `# Welcome to Notewormy! 💎✨
 
-## Supported Features
+## A sleek, modern editor built for focus.
 
-### Text Formatting
-- **Bold text**
-- *Italic*
-- ~~Strikethrough~~
-- \`inline code\`
+### Key Features:
+- Easily create bold, italic, or \`inline code\`.
+- Organize your thoughts with numbered or bulleted lists.
+- A minimalist design that's both beautiful and functional.
 
-### Lists
-1. Numbered list
-2. Second item
-   - Nested list
-   - Another nested item
-
-### Links and Images
-[Example link](https://example.com)
-
-![Alt text](https://via.placeholder.com/150 "Tooltip")
-
-### Tables
-| Header 1   | Header 2   |
-|------------|------------|
-| Cell 1    | Cell 2    |
-| Cell 3    | Cell 4    |
-
-### Quotes
-> This is a quote.
-> It can span multiple lines.
-
-### Horizontal Rule
----
-`);
+> "Simplicity is the ultimate sophistication." 
+> – Leonardo da Vinci
+`
+  );
 
   useEffect(() => {
     const savedNotes = localStorage.getItem('notesList');
+    const lastOpenedNoteId = localStorage.getItem('lastOpenedNote');
     if (savedNotes) {
       try {
         const parsedNotes = JSON.parse(savedNotes);
         setNotesList(parsedNotes);
+        if(lastOpenedNoteId){
+          const lastOpenedNote = parsedNotes.find(note => note.id === parseInt(lastOpenedNoteId));
+          if (lastOpenedNote) {
+            setCurrentNoteId(lastOpenedNote.id);
+            setMarkdownContent(lastOpenedNote.content);
+          } else {
+            setCurrentNoteId(null);
+            setMarkdownContent('');
+          }
+        }
       } catch (e) {
         console.error('Failed to parse notes from localStorage', e);
       }
@@ -90,14 +234,13 @@ function App() {
     const newNote = {
       id: Date.now(),
       title: 'New Note',
-      content: '# New note\n\nStart writing here...',
+      content: '# New Note\n\nStart writing here...',
       description: '',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       isTitleCustom: false,
       isDescriptionCustom: false
     };
-
     const updatedNotes = [...notesList, newNote];
     saveNotesList(updatedNotes);
     setMarkdownContent(newNote.content);
@@ -107,6 +250,7 @@ function App() {
   const handleNoteClick = useCallback((note) => {
     setMarkdownContent(note.content);
     setCurrentNoteId(note.id);
+    localStorage.setItem('lastOpenedNote', note.id);
   }, []);
 
   const deleteNote = useCallback((id, e) => {
@@ -114,31 +258,34 @@ function App() {
     const updatedNotes = notesList.filter(n => n.id !== id);
     saveNotesList(updatedNotes);
     if (currentNoteId === id) {
-      setMarkdownContent('');
-      setCurrentNoteId(null);
+      if (updatedNotes) {
+        const firstNote = updatedNotes[0];
+        setMarkdownContent(firstNote.content);
+        setCurrentNoteId(firstNote.id);
+      } else {
+        setMarkdownContent('');
+        setCurrentNoteId(null);
+      }
+
     }
   }, [notesList, currentNoteId, saveNotesList]);
 
   const saveCurrentNote = useCallback(() => {
     if (!currentNoteId) return;
-
     const updatedNotes = notesList.map(note => {
       if (note.id === currentNoteId) {
         return {
           ...note,
           content: markdownContent,
           updatedAt: new Date().toISOString(),
-          title: note.isTitleCustom ? note.title : markdownContent.split('\n')[0].replace('#', '').trim() || 'Untitled Note',
+          title: note.isTitleCustom ? note.title : markdownContent.split('\n')[0].replace(/#/g, '').trim() || 'Untitled Note',
           description: note.isDescriptionCustom ? note.description : (
-            markdownContent.split('\n')[1] ? 
-            markdownContent.split('\n')[1].trim() : 
-            markdownContent.substring(0, 50).replace(/#/g, '').trim()
+            markdownContent.split('\n').slice(1).find(line => line.trim()) || markdownContent.substring(0, 80).replace(/#/g, '').trim()
           )
         };
       }
       return note;
     });
-
     saveNotesList(updatedNotes);
   }, [currentNoteId, markdownContent, notesList, saveNotesList]);
 
@@ -158,7 +305,6 @@ function App() {
 
   const saveEdit = useCallback(() => {
     if (!editingNoteId || !editingField) return;
-
     const updatedNotes = notesList.map(note => {
       if (note.id === editingNoteId) {
         return {
@@ -171,7 +317,6 @@ function App() {
       }
       return note;
     });
-
     saveNotesList(updatedNotes);
     setEditingNoteId(null);
     setEditingField(null);
@@ -179,9 +324,8 @@ function App() {
   }, [editingNoteId, editingField, editValue, notesList, saveNotesList]);
 
   const handleEditKeyPress = useCallback((e) => {
-    if (e.key === 'Enter') {
-      saveEdit();
-    } else if (e.key === 'Escape') {
+    if (e.key === 'Enter' && !e.shiftKey) { saveEdit(); }
+    else if (e.key === 'Escape') {
       setEditingNoteId(null);
       setEditingField(null);
       setEditValue('');
@@ -189,124 +333,73 @@ function App() {
   }, [saveEdit]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-600 to-orange-800 p-8 flex flex-col items-center">
-      <div className="bg-white rounded-xl shadow-2xl p-6 mb-8 w-full max-w-3xl text-center">
-        <h1 className="text-5xl font-extrabold text-gray-800 mb-2">📝 Simple Notes App</h1>
-        <p className="text-gray-600 text-lg">Write. Review. Compose.</p>
-      </div>
+    <div style={styles.appBackground} className="flex flex-col items-center">
+      <header style={styles.header}>
+        <h1 style={styles.headerTitle}><FaFeatherAlt /> Notewormy</h1>
+        <p style={styles.headerSubtitle}>Your Markdown Notepad</p>
+      </header>
 
-      <div className='flex flex-row gap-8 w-full max-w-10xl'>
-        <div className="w-full max-w-2xl bg-white rounded-xl shadow-2xl p-2 min-h-[500px] max-h-[800px] py-4 px-6">
-          <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl font-bold text-gray-800">📌 Notes list</h1>
-            <button
-              className="bg-orange-600 hover:bg-orange-400 cursor-pointer text-white font-bold py-2 px-4 rounded-lg shadow transition duration-200"
-              onClick={addNewNote}
-            >
-              New Note
-            </button>
-          </div>
+      <main style={styles.container}>
+        <div style={styles.notesListContainer}>
+          <div style={styles.notesListWrapper}>
+            <div className="flex justify-between items-center mb-6">
+              <h2 style={styles.notesListHeader}>My Notes</h2>
+              <button style={styles.button} onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'} onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'} onClick={addNewNote}>
+                <MdOutlinePlaylistAdd style={{ height: '1.4em', width: '1.4em' }} />
+                New Note
+              </button>
+            </div>
 
-          {notesList.length > 0 ? (
-            <div className="space-y-2 max-h-[680px] overflow-y-auto">
-              {notesList.map(note => (
-                <div
-                  key={note.id}
-                  className={`p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition duration-200 ${currentNoteId === note.id ? 'border-orange-400 bg-orange-50' : 'border-gray-200'}`}
-                  onClick={() => handleNoteClick(note)}
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1 min-w-0">
-                      {editingNoteId === note.id && editingField === 'title' ? (
-                        <input
-                          type="text"
-                          value={editValue}
-                          onChange={(e) => setEditValue(e.target.value)}
-                          onBlur={saveEdit}
-                          onKeyDown={handleEditKeyPress}
-                          autoFocus
-                          className="w-full font-medium text-gray-800 mb-1 border border-gray-300 rounded px-2 py-1 bg-white"
-                        />
-                      ) : (
-                        <h3 
-                          className="font-medium text-gray-800 truncate"
-                          onDoubleClick={(e) => handleDoubleClick(note.id, 'title', e)}
-                        >
-                          {note.title || 'Untitled Note'}
-                        </h3>
-                      )}
-                      
-                      {editingNoteId === note.id && editingField === 'description' ? (
-                        <input
-                          type="text"
-                          value={editValue}
-                          onChange={(e) => setEditValue(e.target.value)}
-                          onBlur={saveEdit}
-                          onKeyDown={handleEditKeyPress}
-                          autoFocus
-                          className="w-full text-sm text-gray-500 mb-1 border border-gray-300 rounded px-2 py-1 bg-white"
-                        />
-                      ) : (
-                        <p 
-                          className="text-sm text-gray-500 truncate"
-                          onDoubleClick={(e) => handleDoubleClick(note.id, 'description', e)}
-                        >
-                          {note.description || note.content.substring(0, 50).replace(/#/g, '').trim() || 'Empty note...'}
-                        </p>
-                      )}
-                      <p className="text-xs text-gray-400 mt-1">
-                        {new Date(note.updatedAt || note.createdAt).toLocaleString()}
-                      </p>
+            <div className="flex-1 pr-2 pt-1 pl-1 overflow-y-auto custom-scrollbar">
+              {notesList.length > 0 ? (
+                notesList.map(note => (
+                  <div key={note.id} style={{ ...styles.noteItem, ...(currentNoteId === note.id ? styles.activeNote : {}) }} onClick={() => handleNoteClick(note)}>
+                    <div className="flex justify-between items-start gap-2">
+                      <div className="flex-1 min-w-0">
+                        {editingNoteId === note.id && editingField === 'title' ? (
+                          <input type="text" value={editValue} onChange={(e) => setEditValue(e.target.value)} onBlur={saveEdit} onKeyDown={handleEditKeyPress} autoFocus style={styles.inputField} onClick={e => e.stopPropagation()} />
+                        ) : (
+                          <h3 style={styles.noteTitle} onDoubleClick={(e) => handleDoubleClick(note.id, 'title', e)}> {note.title || 'Untitled Note'} </h3>
+                        )}
+                        {editingNoteId === note.id && editingField === 'description' ? (
+                          <input type="text" value={editValue} onChange={(e) => setEditValue(e.target.value)} onBlur={saveEdit} onKeyDown={handleEditKeyPress} autoFocus style={{ ...styles.inputField, marginTop: '4px', fontSize: '0.9rem' }} onClick={e => e.stopPropagation()} />
+                        ) : (
+                          <p style={styles.noteDescription} onDoubleClick={(e) => handleDoubleClick(note.id, 'description', e)}> {note.description || 'No description'} </p>
+                        )}
+                        <p style={styles.noteDate}> {new Date(note.updatedAt || note.createdAt).toLocaleString()} </p>
+                      </div>
+                      <button style={styles.deleteButton} onClick={(e) => deleteNote(note.id, e)} aria-label="Delete note" onMouseOver={e => e.currentTarget.style.opacity = 1} onMouseOut={e => e.currentTarget.style.opacity = 0.5}>
+                        <FaTrash />
+                      </button>
                     </div>
-                    <button
-                      className="text-red-500 hover:text-red-700 p-1 cursor-pointer"
-                      onClick={(e) => deleteNote(note.id, e)}
-                      aria-label="Delete note"
-                    >
-                      <FaTrash />
-                    </button>
                   </div>
+                ))
+              ) : (
+                <div className="text-center py-10" style={{ color: palette.text, opacity: 0.5 }}>
+                  No notes yet. <br /> Click "New Note" to begin.
                 </div>
-              ))}
+              )}
             </div>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              No notes yet. Click "New Note" to create one!
-            </div>
-          )}
+          </div>
         </div>
 
-        <div className="w-full max-w-8xl bg-white rounded-xl shadow-2xl p-2 min-h-[500px] max-h-[800px] flex flex-col overflow-y-auto">
-          <div className="flex-1 overflow-y-auto">
+        <div style={styles.editorContainer}>
+          <div className="flex-1 overflow-y-auto no-scrollbar">
             <MDXEditor
               key={currentNoteId || 'editor'}
               markdown={markdownContent}
               onChange={handleContentChange}
               plugins={[
-                headingsPlugin(),
-                listsPlugin(),
-                quotePlugin(),
-                tablePlugin(),
-                thematicBreakPlugin(),
-                linkPlugin(),
-                linkDialogPlugin(),
-                imagePlugin(),
-                codeBlockPlugin({ defaultCodeBlockLanguage: 'txt' }),
+                headingsPlugin(), listsPlugin(), quotePlugin(), tablePlugin(),
+                thematicBreakPlugin(), linkPlugin(), linkDialogPlugin(), imagePlugin(),
+                codeBlockPlugin({ defaultCodeBlockLanguage: 'js' }),
                 codeMirrorPlugin({ codeBlockLanguages: { js: 'JavaScript', css: 'CSS', txt: 'Plain Text' } }),
-                directivesPlugin(),
-                frontmatterPlugin(),
-                markdownShortcutPlugin(),
+                directivesPlugin(), frontmatterPlugin(), markdownShortcutPlugin(),
                 toolbarPlugin({
                   toolbarContents: () => (
                     <>
-                      <UndoRedo />
-                      <BoldItalicUnderlineToggles />
-                      <ListsToggle />
-                      <BlockTypeSelect />
-                      <CreateLink />
-                      <InsertTable />
-                      <InsertImage />
-                      <InsertThematicBreak />
+                      <UndoRedo /> <BoldItalicUnderlineToggles /> <ListsToggle />
+                      <BlockTypeSelect /> <CreateLink /> <InsertTable /> <InsertImage /> <InsertThematicBreak />
                     </>
                   )
                 })
@@ -329,24 +422,22 @@ function App() {
             />
           </div>
 
-          <div className="flex justify-end p-2">
-            <button
-              className="flex items-center gap-2 bg-orange-600 cursor-pointer hover:bg-orange-400 text-white font-bold py-2 px-4 rounded-lg shadow transition duration-200"
-              onClick={saveCurrentNote}
-              disabled={!currentNoteId}
-            >
+          <div className="flex justify-end p-4 border-t" style={{ borderColor: palette.darkBg }}>
+            <button style={{ ...styles.button, opacity: !currentNoteId ? 0.5 : 1 }} onMouseOver={e => { if (currentNoteId) e.currentTarget.style.transform = 'scale(1.05)'; }} onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'} onClick={saveCurrentNote} disabled={!currentNoteId}>
               <FaSave /> Save
             </button>
           </div>
         </div>
-      </div>
+      </main>
 
-      <footer className="mt-12 text-white text-center text-opacity-80">
-        <p>2025 Simple Notes App</p>
-        <p>Created with 🧡 for your notes</p>
+      <footer style={styles.footer}>
+        <p> {new Date().getFullYear()} Notewormy</p>
+        <p>Powered by <a href="https://github.com/advre617">Nikita Rulevics</a></p>
+        <span className='flex flex-row gap-2 items-center justify-center'> With <FaHeart /> for your notes</span>
+
       </footer>
     </div>
   )
 }
 
-export default App
+export default App;

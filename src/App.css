@@ -1,3 +1,4 @@
+
 @import "tailwindcss";
 
 @font-face {
@@ -113,10 +114,167 @@
 }
 
 body {
-    font-family: 'Nunito', sans-serif;
+  font-family: 'Nunito', sans-serif;
+  background-color: #222831;
 }
 
-._primaryButton_sects_507{
-    background-color: #f54900;
-    border: #9f2d00;
+.mdxeditor-root {
+  padding: 0 !important; 
+  border-radius: 16px !important; 
+  overflow: hidden; 
+}
+
+.mdxeditor-toolbar {
+  background-color: #282f38 !important;
+  border-bottom: 1px solid #393E46 !important;
+  border-top-left-radius: 16px !important;
+  border-top-right-radius: 16px !important;
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+  padding: 8px 12px !important; 
+  box-sizing: border-box; 
+}
+
+
+.mdxeditor-toolbar button,
+.mdxeditor-toolbar svg {
+  color: #EEEEEE !important;
+}
+
+.mdxeditor-toolbar button:hover:not([disabled]) {
+  background-color: #8b8f96 !important;
+}
+
+.mdxeditor-toolbar button[data-state="on"] {
+  background-color: rgba(0, 173, 181, 0.2) !important;
+}
+
+.mdxeditor-lexical-editor {
+    padding: 1rem !important; 
+    box-sizing: border-box;
+}
+
+.mdxeditor-lexical-heading-h1 {
+  font-size: 2em;
+  font-weight: bold;
+  color: #EEEEEE;
+}
+
+.mdxeditor-lexical-heading-h2 {
+  font-size: 1.5em;
+  font-weight: bold;
+  color: #EEEEEE;
+}
+
+.mdxeditor-lexical-link {
+  color: #00ADB5 !important;
+  text-decoration: underline;
+}
+
+.mdxeditor-lexical-quote {
+  color: #EEEEEE;
+  opacity: 0.8;
+  border-left: 4px solid #00ADB5;
+  padding-left: 1rem;
+  margin-left: 0;
+}
+
+.mdxeditor-lexical-code {
+  color: #00ADB5;
+  background-color: rgba(0, 173, 181, 0.1);
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #222831;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #00ADB5;
+  border-radius: 10px;
+  border: 2px solid #222831;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #00c5cf;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.mdxeditor {
+  background-color: transparent !important;
+  border: none !important;
+  color: #EEEEEE !important;
+  caret-color: #00ADB5 !important;
+  padding: 0 !important; 
+}
+
+.prose {
+    padding: 1rem !important; 
+}
+
+.mdxeditor-container {
+    padding: 0 !important;
+}
+
+._contentEditable_sects_380 {
+  color: #EEEEEE !important;
+  font-family: 'Nunito', sans-serif !important; 
+}
+
+._selectTrigger_sects_308 {
+  color: #EEEEEE !important;
+  background-color: #393E46 !important;
+  font-family: 'Nunito', sans-serif;
+}
+
+._code_1tncs_52{
+  color: #00ADB5 !important;
+  background-color: rgba(0, 173, 181, 0.1) !important;
+  padding: 2px 4px !important;
+  border-radius: 4px !important;
+  font-family: monospace !important;
+}
+
+._toolbarRoot_sects_162::-webkit-scrollbar {
+  height: 10px;
+}
+
+._toolbarRoot_sects_162::-webkit-scrollbar-track {
+  background: #222831;
+  border-radius: 10px;
+}
+
+._toolbarRoot_sects_162::-webkit-scrollbar-thumb {
+  background-color: #00ADB5;
+  border-radius: 10px;
+  border: 2px solid #222831;
+}
+
+._toolbarRoot_sects_162::-webkit-scrollbar-thumb:hover {
+  background-color: #00c5cf;
+}
+
+.\[\&\>blockquote\]\:text-gray-600 {
+  &>blockquote {
+    color: #EEEEEE !important;
+    background-color: #393E46 !important;
+    border-left: 4px solid #00ADB5 !important;
+    padding-left: 1rem !important;
+    margin-left: 0 !important;
+    font-family: 'Nunito', sans-serif;
+  }
+}
+
+a{
+  color: rgb(0, 173, 181) !important;
 }

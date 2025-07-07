@@ -258,7 +258,7 @@ function App() {
     const updatedNotes = notesList.filter(n => n.id !== id);
     saveNotesList(updatedNotes);
     if (currentNoteId === id) {
-      if (updatedNotes) {
+      if (updatedNotes.length > 0) {
         const firstNote = updatedNotes[0];
         setMarkdownContent(firstNote.content);
         setCurrentNoteId(firstNote.id);

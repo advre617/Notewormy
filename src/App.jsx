@@ -31,6 +31,9 @@ import { FaTrash, FaSave } from 'react-icons/fa'
 function App() {
   const [notesList, setNotesList] = useState([]);
   const [currentNoteId, setCurrentNoteId] = useState(null);
+  const [editingNoteId, setEditingNoteId] = useState(null);
+  const [editingField, setEditingField] = useState(null);
+  const [editValue, setEditValue] = useState('');
   const [markdownContent, setMarkdownContent] = useState(`# Welcome to the Markdown editor!
 
 ## Supported Features
@@ -88,8 +91,11 @@ function App() {
       id: Date.now(),
       title: 'New Note',
       content: '# New note\n\nStart writing here...',
+      description: '',
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      isTitleCustom: false,
+      isDescriptionCustom: false
     };
 
     const updatedNotes = [...notesList, newNote];
@@ -122,7 +128,12 @@ function App() {
           ...note,
           content: markdownContent,
           updatedAt: new Date().toISOString(),
-          title: markdownContent.split('\n')[0].replace('#', '').trim() || 'Untitled Note'
+          title: note.isTitleCustom ? note.title : markdownContent.split('\n')[0].replace('#', '').trim() || 'Untitled Note',
+          description: note.isDescriptionCustom ? note.description : (
+            markdownContent.split('\n')[1] ? 
+            markdownContent.split('\n')[1].trim() : 
+            markdownContent.substring(0, 50).replace(/#/g, '').trim()
+          )
         };
       }
       return note;
@@ -135,6 +146,48 @@ function App() {
     setMarkdownContent(newContent);
   }, []);
 
+  const handleDoubleClick = useCallback((noteId, field, e) => {
+    e.stopPropagation();
+    const note = notesList.find(n => n.id === noteId);
+    if (note) {
+      setEditingNoteId(noteId);
+      setEditingField(field);
+      setEditValue(field === 'title' ? note.title : note.description || '');
+    }
+  }, [notesList]);
+
+  const saveEdit = useCallback(() => {
+    if (!editingNoteId || !editingField) return;
+
+    const updatedNotes = notesList.map(note => {
+      if (note.id === editingNoteId) {
+        return {
+          ...note,
+          [editingField]: editValue,
+          isTitleCustom: editingField === 'title' ? true : note.isTitleCustom,
+          isDescriptionCustom: editingField === 'description' ? true : note.isDescriptionCustom,
+          updatedAt: new Date().toISOString()
+        };
+      }
+      return note;
+    });
+
+    saveNotesList(updatedNotes);
+    setEditingNoteId(null);
+    setEditingField(null);
+    setEditValue('');
+  }, [editingNoteId, editingField, editValue, notesList, saveNotesList]);
+
+  const handleEditKeyPress = useCallback((e) => {
+    if (e.key === 'Enter') {
+      saveEdit();
+    } else if (e.key === 'Escape') {
+      setEditingNoteId(null);
+      setEditingField(null);
+      setEditValue('');
+    }
+  }, [saveEdit]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-600 to-orange-800 p-8 flex flex-col items-center">
       <div className="bg-white rounded-xl shadow-2xl p-6 mb-8 w-full max-w-3xl text-center">
@@ -143,8 +196,7 @@ function App() {
       </div>
 
       <div className='flex flex-row gap-8 w-full max-w-10xl'>
-        {/* Боковая панель со списком заметок */}
-        <div className="w-full max-w-2xl bg-white rounded-xl shadow-2xl p-2 min-h-[500px] py-4 px-6">
+        <div className="w-full max-w-2xl bg-white rounded-xl shadow-2xl p-2 min-h-[500px] max-h-[800px] py-4 px-6">
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-bold text-gray-800">📌 Notes list</h1>
             <button
@@ -156,7 +208,7 @@ function App() {
           </div>
 
           {notesList.length > 0 ? (
-            <div className="space-y-2 max-h-[400px] overflow-y-auto">
+            <div className="space-y-2 max-h-[680px] overflow-y-auto">
               {notesList.map(note => (
                 <div
                   key={note.id}
@@ -165,12 +217,43 @@ function App() {
                 >
                   <div className="flex justify-between items-start">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-gray-800 truncate">
-                        {note.title || 'Untitled Note'}
-                      </h3>
-                      <p className="text-sm text-gray-500 truncate">
-                        {note.content.substring(0, 50).replace(/#/g, '').trim() || 'Empty note...'}
-                      </p>
+                      {editingNoteId === note.id && editingField === 'title' ? (
+                        <input
+                          type="text"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          onBlur={saveEdit}
+                          onKeyDown={handleEditKeyPress}
+                          autoFocus
+                          className="w-full font-medium text-gray-800 mb-1 border border-gray-300 rounded px-2 py-1 bg-white"
+                        />
+                      ) : (
+                        <h3 
+                          className="font-medium text-gray-800 truncate"
+                          onDoubleClick={(e) => handleDoubleClick(note.id, 'title', e)}
+                        >
+                          {note.title || 'Untitled Note'}
+                        </h3>
+                      )}
+                      
+                      {editingNoteId === note.id && editingField === 'description' ? (
+                        <input
+                          type="text"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          onBlur={saveEdit}
+                          onKeyDown={handleEditKeyPress}
+                          autoFocus
+                          className="w-full text-sm text-gray-500 mb-1 border border-gray-300 rounded px-2 py-1 bg-white"
+                        />
+                      ) : (
+                        <p 
+                          className="text-sm text-gray-500 truncate"
+                          onDoubleClick={(e) => handleDoubleClick(note.id, 'description', e)}
+                        >
+                          {note.description || note.content.substring(0, 50).replace(/#/g, '').trim() || 'Empty note...'}
+                        </p>
+                      )}
                       <p className="text-xs text-gray-400 mt-1">
                         {new Date(note.updatedAt || note.createdAt).toLocaleString()}
                       </p>
@@ -193,8 +276,8 @@ function App() {
           )}
         </div>
 
-        <div className="w-full max-w-8xl bg-white rounded-xl shadow-2xl p-2 min-h-[500px] flex flex-col">
-          <div className="flex-1">
+        <div className="w-full max-w-8xl bg-white rounded-xl shadow-2xl p-2 min-h-[500px] max-h-[800px] flex flex-col overflow-y-auto">
+          <div className="flex-1 overflow-y-auto">
             <MDXEditor
               key={currentNoteId || 'editor'}
               markdown={markdownContent}
@@ -256,7 +339,6 @@ function App() {
             </button>
           </div>
         </div>
-        
       </div>
 
       <footer className="mt-12 text-white text-center text-opacity-80">

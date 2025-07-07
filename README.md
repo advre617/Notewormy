@@ -3,7 +3,7 @@ A modern and as minimalistic as possible web application for keeping records of 
 
 ![image](https://github.com/user-attachments/assets/28284cf4-d9ac-4432-a4f3-60cbc02d119a)
 
-> Markdown note-taking app built with React and [MDXEditor](https://mdxeditor.dev/).
+> Markdown note-taking app built with [React](https://react.dev) and [MDXEditor](https://mdxeditor.dev/).
 > Minimalist. Functional. User-friendly.
 
 ---
@@ -32,19 +32,25 @@ A modern and as minimalistic as possible web application for keeping records of 
 
 ## Installation
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com//advre617/markdown-notepad.git
-   cd markdown-notepad
-  ```
-2. Install dependencies:
-  ```bash
-   npm install
-  ```
-3. Start the app:
-  ```bash
-   npm start
-  ```
+1. Clone the repository
+
+```bash
+  cd my-project
+```
+
+2. Install dependencies
+
+```bash
+  npm install
+```
+
+3. Start the server
+
+```bash
+  npm run start
+```
+
+Done! Go to http://localhost:5173 and you can start using the application locally
 
 ## Author
 

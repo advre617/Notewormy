@@ -1,4 +1,6 @@
 # 🪶 Notewormy
+[![Node.JS](https://img.shields.io/badge/nodejs-v22.14.0-blue.svg)](https://nodejs.org/en/blog/release/v22.14.0) [![Node.JS](https://img.shields.io/badge/Status-Developing-green.svg)]() 
+
 A modern and as minimalistic as possible web application for keeping records of all kinds, using Markdown to format these records in a convenient format. It is designed for those who appreciate a clean borderless interface and maximum focus on content. The application runs completely client-side and does not require connection to any server. All your notes are stored in your browser's `localStorage`.
 
 ![image](https://github.com/user-attachments/assets/28284cf4-d9ac-4432-a4f3-60cbc02d119a)
@@ -17,7 +19,6 @@ A modern and as minimalistic as possible web application for keeping records of 
 - Undo/redo, lists, tables, code blocks, images, quotes, and more
 - Fully client-side — your notes stay private
 
----
 
 ## Tech Stack
 
@@ -28,7 +29,6 @@ A modern and as minimalistic as possible web application for keeping records of 
 - **React Icons** (`react-icons/fa`, `react-icons/md`)
 - Local storage for persistence
 
----
 
 ## Installation
 
@@ -44,14 +44,38 @@ A modern and as minimalistic as possible web application for keeping records of 
   npm install
 ```
 
-3. Start the server
+or 
 
 ```bash
-  npm run start
+  yarn add
 ```
 
-Done! Go to http://localhost:5173 and you can start using the application locally
+3. Start the server(If you are **NOT** using the stable version)
+
+```bash
+  npm run dev
+```
+
+or 
+
+```bash
+  yarn dev
+```
+
+4. Start the server(If you are using the stable version)
+
+```bash
+  npm run preview
+```
+
+or 
+
+```bash
+  yarn preview
+```
+
+Done! Go to http://localhost:5173 **(DEV)** or http://localhost:4173 **(PREVIEW)** and you can start using the application locally
 
 ## Author
 
-- [@advre617](https://github.com/advre617)
+- [@advre617 (Nikita Rulevics)](https://github.com/advre617)

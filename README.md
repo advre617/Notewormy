@@ -1,5 +1,5 @@
 # 🪶 Notewormy. Minimalistic Markdown notepad.
-[![Node.JS](https://img.shields.io/badge/nodejs-v22.14.0-blue.svg)](https://nodejs.org/en/blog/release/v22.14.0) [![Node.JS](https://img.shields.io/badge/Status-Developing-green.svg)]() 
+[![Node.JS](https://img.shields.io/badge/nodejs->v22.14.0-blue.svg)](https://nodejs.org/en/blog/release/v22.14.0) [![Node.JS](https://img.shields.io/badge/Status-Developing-green.svg)]() 
 
 A modern and as minimalistic as possible web application for keeping records of all kinds, using Markdown to format these records in a convenient format. It is designed for those who appreciate a clean borderless interface and maximum focus on content. The application runs completely client-side and does not require connection to any server. All your notes are stored in your browser's `localStorage`.
 

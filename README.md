@@ -5,8 +5,9 @@ A modern and as minimalistic as possible web application for keeping records of 
 
 ![image](https://github.com/user-attachments/assets/28284cf4-d9ac-4432-a4f3-60cbc02d119a)
 
-> Markdown note-taking app built with [React](https://react.dev) and [MDXEditor](https://mdxeditor.dev/).
-> Minimalist. Functional. User-friendly.
+Markdown note-taking app built with [React](https://react.dev) and [MDXEditor](https://mdxeditor.dev/).
+
+Minimalist. Functional. User-friendly.
 
 ---
 

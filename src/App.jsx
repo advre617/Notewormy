@@ -29,7 +29,6 @@ import './App.css';
 import { FaTrash, FaSave, FaFeatherAlt, FaHeart } from 'react-icons/fa';
 import { MdOutlinePlaylistAdd } from "react-icons/md";
 
-
 // color palette for the app (dark theme)
 const palette = {
   darkBg: '#222831',
@@ -43,7 +42,7 @@ const styles = {
   appBackground: {
     backgroundColor: palette.darkBg,
     minHeight: '100vh',
-    padding: '2rem',
+    padding: '1.5rem 2rem',
     color: palette.text,
     fontFamily: "'Nunito', sans-serif"
   },
@@ -111,7 +110,7 @@ const styles = {
     borderColor: 'transparent',
     borderRadius: '12px',
     marginBottom: '0.75rem',
-    cursor: 'pointer',
+    cursor: 'grab',
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
     transition: 'all 0.2s ease-in-out',
   },
@@ -179,14 +178,14 @@ const styles = {
   }
 };
 
-
-
 function App() {
   const [notesList, setNotesList] = useState([]);
   const [currentNoteId, setCurrentNoteId] = useState(null);
   const [editingNoteId, setEditingNoteId] = useState(null);
   const [editingField, setEditingField] = useState(null);
   const [editValue, setEditValue] = useState('');
+  const [draggedNoteId, setDraggedNoteId] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
   const [markdownContent, setMarkdownContent] = useState(
     `# Welcome to Notewormy! 💎✨
 
@@ -209,7 +208,7 @@ function App() {
       try {
         const parsedNotes = JSON.parse(savedNotes);
         setNotesList(parsedNotes);
-        if(lastOpenedNoteId){
+        if (lastOpenedNoteId) {
           const lastOpenedNote = parsedNotes.find(note => note.id === parseInt(lastOpenedNoteId));
           if (lastOpenedNote) {
             setCurrentNoteId(lastOpenedNote.id);
@@ -332,6 +331,42 @@ function App() {
     }
   }, [saveEdit]);
 
+  const handleDragStart = (e, id) => {
+    setDraggedNoteId(id);
+    setIsDragging(true);
+
+    const img = new Image();
+    img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSIxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjwvc3ZnPg==';
+    e.dataTransfer.setDragImage(img, 0, 0);
+
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragEnter = (e, targetId) => {
+    e.preventDefault();
+    if (draggedNoteId === targetId) return;
+
+    const updatedList = [...notesList];
+    const draggedIdx = updatedList.findIndex(n => n.id === draggedNoteId);
+    const targetIdx = updatedList.findIndex(n => n.id === targetId);
+
+    const [draggedNote] = updatedList.splice(draggedIdx, 1);
+    updatedList.splice(targetIdx, 0, draggedNote);
+
+    setNotesList(updatedList);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedNoteId(null);
+    setIsDragging(false);
+    saveNotesList(notesList);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+
   return (
     <div style={styles.appBackground} className="flex flex-col items-center">
       <header style={styles.header}>
@@ -353,7 +388,22 @@ function App() {
             <div className="flex-1 pr-2 pt-1 pl-1 overflow-y-auto custom-scrollbar">
               {notesList.length > 0 ? (
                 notesList.map(note => (
-                  <div key={note.id} style={{ ...styles.noteItem, ...(currentNoteId === note.id ? styles.activeNote : {}) }} onClick={() => handleNoteClick(note)}>
+                  <div
+                    key={note.id}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, note.id)}
+                    onDragEnter={(e) => handleDragEnter(e, note.id)}
+                    onDragEnd={handleDragEnd}
+                    onDragOver={handleDragOver}
+                    className={`note-item ${isDragging && draggedNoteId === note.id ? 'grabbing' : 'grab-ready'
+                      }`}
+                    style={{
+                      ...styles.noteItem,
+                      ...(currentNoteId === note.id ? styles.activeNote : {}),
+                    }}
+                    onClick={() => handleNoteClick(note)}
+                  >
+
                     <div className="flex justify-between items-start gap-2">
                       <div className="flex-1 min-w-0">
                         {editingNoteId === note.id && editingField === 'title' ? (

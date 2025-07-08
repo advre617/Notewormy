@@ -135,14 +135,21 @@ body {
   box-sizing: border-box; 
 }
 
+._editImageToolbar_sects_933{
+  background-color: #393E46 !important;
+  box-sizing: border-box !important;
+}
+
 
 .mdxeditor-toolbar button,
+._iconButton_sects_457,
 .mdxeditor-toolbar svg {
   color: #EEEEEE !important;
 }
 
-.mdxeditor-toolbar button:hover:not([disabled]) {
-  background-color: #8b8f96 !important;
+.mdxeditor-toolbar button:hover:not([disabled]),
+._iconButton_sects_457:hover:not([disabled]) {
+  background-color: #71747a !important;
 }
 
 .mdxeditor-toolbar button[data-state="on"] {
@@ -264,6 +271,51 @@ body {
   background-color: #00c5cf;
 }
 
+._tableColumnEditorTrigger_sects_744, .mdxeditor-select-content{
+  color: #EEEEEE !important;
+  background-color: #393E46 !important;
+  font-family: 'Nunito', sans-serif;
+}
+
+.mdxeditor-select-content:hover {
+  background-color: #393E46 !important;
+}
+
+._linkDialogPopoverContent_sects_601, ._dialogContent_sects_603{
+  background-color: #393E46 !important;
+  border: none !important;
+  color: #EEEEEE !important;
+  font-family: 'Nunito', sans-serif;
+}
+
+._textInput_sects_1201{
+  color: #EEEEEE !important;
+  background-color: #393E46 !important;
+  border: 1px solid #EEEEEE !important;
+  border-radius: 4px !important;
+  padding: 0.35rem !important;
+  font-family: 'Nunito', sans-serif !important;
+}
+
+._secondaryButton_sects_508{
+  background-color: #282f38 !important;
+  color: #EEEEEE !important;
+  border: none !important;
+  border-radius: 4px !important;
+  padding: 0.5rem 1rem !important;
+  font-family: 'Nunito', sans-serif !important;
+}
+
+._primaryButton_sects_507 {
+  background-color: #00ADB5 !important;
+  color: rgb(34, 40, 49) !important;
+  border: none !important;
+  border-radius: 4px !important;
+  padding: 0.5rem 1rem !important;
+  font-family: 'Nunito', sans-serif;
+}
+
+
 .\[\&\>blockquote\]\:text-gray-600 {
   &>blockquote {
     color: #EEEEEE !important;
@@ -277,4 +329,22 @@ body {
 
 a{
   color: rgb(0, 173, 181) !important;
+}
+
+.note-item {
+  cursor: grab;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.note-item.grab-ready:hover {
+  cursor: grab;
+}
+
+.note-item.grabbing {
+  cursor: grabbing;
+  opacity: 0.7;
+  transform: scale(0.98);
+  box-shadow: 0 0 0 2px rgba(0,173,181,0.2);
+  background-color: rgba(0, 173, 181, 0.2);
+  border-color: #00ADB5;
 }

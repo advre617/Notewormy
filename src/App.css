@@ -288,6 +288,10 @@ body {
   font-family: 'Nunito', sans-serif;
 }
 
+._dialogOverlay_sects_870{
+  background-color: #4f5257 !important;
+}
+
 ._textInput_sects_1201{
   color: #EEEEEE !important;
   background-color: #393E46 !important;
@@ -332,19 +336,37 @@ a{
 }
 
 .note-item {
-  cursor: grab;
+  cursor: pointer;
   transition: transform 0.2s ease, background-color 0.2s ease;
 }
 
 .note-item.grab-ready:hover {
-  cursor: grab;
+  cursor: pointer;
 }
 
 .note-item.grabbing {
   cursor: grabbing;
   opacity: 0.7;
   transform: scale(0.98);
-  box-shadow: 0 0 0 2px rgba(0,173,181,0.2);
+  box-shadow: 0 0 0 2px rgba(0,173,181,0.2);  
   background-color: rgba(0, 173, 181, 0.2);
   border-color: #00ADB5;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { transform: translateY(40px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
 }

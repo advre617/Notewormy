@@ -110,7 +110,7 @@ const styles = {
     borderColor: 'transparent',
     borderRadius: '12px',
     marginBottom: '0.75rem',
-    cursor: 'grab',
+    cursor: 'pointer',
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
     transition: 'all 0.2s ease-in-out',
   },
@@ -151,6 +151,11 @@ const styles = {
     fontWeight: 'bold',
     transition: 'all 0.2s ease',
   },
+  autoSaveText:{
+    color: palette.text,
+    fontSize: '0.875rem',
+    fontFamily: "'Nunito', sans-serif",
+  },
   deleteButton: {
     color: palette.text,
     opacity: 0.5,
@@ -186,8 +191,36 @@ function App() {
   const [editValue, setEditValue] = useState('');
   const [draggedNoteId, setDraggedNoteId] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [markdownContent, setMarkdownContent] = useState(
-    `# Welcome to Notewormy! 💎✨
+  const [markdownContent, setMarkdownContent] = useState('');
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [pendingNoteId, setPendingNoteId] = useState(null);
+  const [autoSaveEnabled, setAutoSaveEnabled] = useState(false);
+
+  useEffect(() => {
+    const savedNotes = localStorage.getItem('notesList');
+    const lastOpenedNoteId = localStorage.getItem('lastOpenedNote');
+
+    if (savedNotes) {
+      try {
+        const parsedNotes = JSON.parse(savedNotes);
+        setNotesList(parsedNotes);
+
+        if (lastOpenedNoteId) {
+          const lastOpenedNote = parsedNotes.find(note => note.id === parseInt(lastOpenedNoteId));
+          if (lastOpenedNote) {
+            setCurrentNoteId(lastOpenedNote.id);
+            setMarkdownContent(lastOpenedNote.content);
+          } else {
+            setCurrentNoteId(null);
+            setMarkdownContent('');
+          }
+        } else if (parsedNotes.length > 0) {
+          // fallback to last note
+          const lastNote = parsedNotes[parsedNotes.length - 1];
+          setCurrentNoteId(lastNote.id);
+          setMarkdownContent(lastNote.content);
+        } else {
+          setMarkdownContent(`# Welcome to Notewormy! 💎✨
 
 ## A sleek, modern editor built for focus.
 
@@ -198,31 +231,29 @@ function App() {
 
 > "Simplicity is the ultimate sophistication." 
 > – Leonardo da Vinci
-`
-  );
-
-  useEffect(() => {
-    const savedNotes = localStorage.getItem('notesList');
-    const lastOpenedNoteId = localStorage.getItem('lastOpenedNote');
-    if (savedNotes) {
-      try {
-        const parsedNotes = JSON.parse(savedNotes);
-        setNotesList(parsedNotes);
-        if (lastOpenedNoteId) {
-          const lastOpenedNote = parsedNotes.find(note => note.id === parseInt(lastOpenedNoteId));
-          if (lastOpenedNote) {
-            setCurrentNoteId(lastOpenedNote.id);
-            setMarkdownContent(lastOpenedNote.content);
-          } else {
-            setCurrentNoteId(null);
-            setMarkdownContent('');
-          }
+`);
         }
+
       } catch (e) {
         console.error('Failed to parse notes from localStorage', e);
+        setMarkdownContent(`# Welcome to Notewormy! 💎✨\n\n...`);
       }
+    } else {
+      setMarkdownContent(`# Welcome to Notewormy! 💎✨
+
+## A sleek, modern editor built for focus.
+
+### Key Features:
+- Easily create bold, italic, or \`inline code\`.
+- Organize your thoughts with numbered or bulleted lists.
+- A minimalist design that's both beautiful and functional.
+
+> "Simplicity is the ultimate sophistication." 
+> – Leonardo da Vinci
+`);
     }
   }, []);
+
 
   const saveNotesList = useCallback((notes) => {
     localStorage.setItem('notesList', JSON.stringify(notes));
@@ -247,10 +278,35 @@ function App() {
   }, [notesList, saveNotesList]);
 
   const handleNoteClick = useCallback((note) => {
+    if (note.id === currentNoteId) return;
+
+    const currentNote = notesList.find(n => n.id === currentNoteId);
+    if (currentNote && currentNote.content !== markdownContent) {
+      setPendingNoteId(note.id);
+      setShowConfirmModal(true);
+      return;
+    }
+
     setMarkdownContent(note.content);
     setCurrentNoteId(note.id);
     localStorage.setItem('lastOpenedNote', note.id);
-  }, []);
+  }, [notesList, currentNoteId, markdownContent]);
+
+  const confirmNoteSwitch = () => {
+    const nextNote = notesList.find(n => n.id === pendingNoteId);
+    if (nextNote) {
+      setMarkdownContent(nextNote.content);
+      setCurrentNoteId(nextNote.id);
+      localStorage.setItem('lastOpenedNote', nextNote.id);
+    }
+    setShowConfirmModal(false);
+    setPendingNoteId(null);
+  };
+
+  const cancelNoteSwitch = () => {
+    setShowConfirmModal(false);
+    setPendingNoteId(null);
+  };
 
   const deleteNote = useCallback((id, e) => {
     e.stopPropagation();
@@ -258,9 +314,9 @@ function App() {
     saveNotesList(updatedNotes);
     if (currentNoteId === id) {
       if (updatedNotes.length > 0) {
-        const firstNote = updatedNotes[0];
-        setMarkdownContent(firstNote.content);
-        setCurrentNoteId(firstNote.id);
+        const lastNote = updatedNotes[updatedNotes.length - 1];
+        setMarkdownContent(lastNote.content);
+        setCurrentNoteId(lastNote.id);
       } else {
         setMarkdownContent('');
         setCurrentNoteId(null);
@@ -287,6 +343,16 @@ function App() {
     });
     saveNotesList(updatedNotes);
   }, [currentNoteId, markdownContent, notesList, saveNotesList]);
+
+  useEffect(() => {
+    if (!autoSaveEnabled) return;
+
+    const interval = setInterval(() => {
+      saveCurrentNote();
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, [autoSaveEnabled, saveCurrentNote]);
 
   const handleContentChange = useCallback((newContent) => {
     setMarkdownContent(newContent);
@@ -374,6 +440,30 @@ function App() {
         <p style={styles.headerSubtitle}>Your Markdown Notepad</p>
       </header>
 
+      {showConfirmModal && (
+        <div className="fixed inset-0 bg-[#4F5257]/50 flex items-center justify-center z-50 transition-opacity animate-fade-in">
+          <div className="bg-[#393E46] rounded-2xl p-8 shadow-2xl max-w-md w-full transform scale-100 transition-transform animate-slide-up">
+            <h2 className="text-xl font-bold text-[#EEEEEE] mb-4">Unsaved changes</h2>
+            <p className="text-[#CCCCCC] mb-6">You have unsaved changes. Are you sure you want to leave without saving?</p>
+            <div className="flex justify-end gap-3">
+              <button
+                className="px-4 py-2 rounded-lg bg-[#00ADB5] text-[#222831] font-semibold hover:bg-[#00cdd5] transition-all"
+                onClick={confirmNoteSwitch}
+              >
+                Leave
+              </button>
+              <button
+                className="px-4 py-2 rounded-lg border border-[#EEEEEE] text-[#EEEEEE] hover:bg-[#4a4e55] transition-all"
+                onClick={cancelNoteSwitch}
+              >
+                Stay
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
       <main style={styles.container}>
         <div style={styles.notesListContainer}>
           <div style={styles.notesListWrapper}>
@@ -390,7 +480,7 @@ function App() {
                 notesList.map(note => (
                   <div
                     key={note.id}
-                    draggable
+                    draggable={editingNoteId !== note.id}
                     onDragStart={(e) => handleDragStart(e, note.id)}
                     onDragEnter={(e) => handleDragEnter(e, note.id)}
                     onDragEnd={handleDragEnd}
@@ -472,7 +562,17 @@ function App() {
             />
           </div>
 
-          <div className="flex justify-end p-4 border-t" style={{ borderColor: palette.darkBg }}>
+          <div className="flex justify-end p-4 border-t gap-4" style={{ borderColor: palette.darkBg }}>
+            <label className="flex items-center gap-2 text-[#EEEEEE] cursor-pointer">
+              <input
+                type="checkbox"
+                checked={autoSaveEnabled}
+                onChange={() => setAutoSaveEnabled(prev => !prev)}
+                className="accent-[#00ADB5] w-4 h-4"
+              />
+              <span style={styles.autoSaveText}>Auto-save</span>
+            </label>
+
             <button style={{ ...styles.button, opacity: !currentNoteId ? 0.5 : 1 }} onMouseOver={e => { if (currentNoteId) e.currentTarget.style.transform = 'scale(1.05)'; }} onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'} onClick={saveCurrentNote} disabled={!currentNoteId}>
               <FaSave /> Save
             </button>

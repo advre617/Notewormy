@@ -26,7 +26,7 @@ import {
 } from '@mdxeditor/editor';
 import '@mdxeditor/editor/style.css';
 import './App.css';
-import { FaTrash, FaSave, FaFeatherAlt, FaHeart } from 'react-icons/fa';
+import { FaTrash, FaSave, FaFeatherAlt, FaHeart, FaFolder, FaFolderOpen, FaChevronDown, FaChevronRight, FaPlus } from 'react-icons/fa';
 import { MdOutlinePlaylistAdd } from "react-icons/md";
 
 // color palette for the app (dark theme)
@@ -35,7 +35,8 @@ const palette = {
   mediumBg: '#393E46',
   accent: '#00ADB5',
   text: '#EEEEEE',
-  danger: '#FF6B6B'
+  danger: '#FF6B6B',
+  groupBg: 'rgba(57, 62, 70, 0.7)'
 };
 
 const styles = {
@@ -151,7 +152,7 @@ const styles = {
     fontWeight: 'bold',
     transition: 'all 0.2s ease',
   },
-  autoSaveText:{
+  autoSaveText: {
     color: palette.text,
     fontSize: '0.875rem',
     fontFamily: "'Nunito', sans-serif",
@@ -180,25 +181,100 @@ const styles = {
     color: palette.text,
     textAlign: 'center',
     opacity: '0.5'
+  },
+  groupHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    padding: '0.75rem 1rem',
+    borderRadius: '8px',
+    backgroundColor: palette.groupBg,
+    marginBottom: '0.5rem',
+    cursor: 'pointer',
+    userSelect: 'none'
+  },
+  groupTitle: {
+    fontWeight: '600',
+    fontSize: '1rem',
+    color: palette.text,
+    flex: 1
+  },
+  groupContent: {
+    paddingLeft: '1.5rem',
+    borderLeft: `2px solid ${palette.accent}`,
+    marginLeft: '0.75rem',
+    marginBottom: '0.75rem'
+  },
+  groupActions: {
+    display: 'flex',
+    gap: '0.5rem'
+  },
+  groupActionButton: {
+    background: 'none',
+    border: 'none',
+    color: palette.text,
+    opacity: 0.5,
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    padding: '0.25rem',
+    borderRadius: '4px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  groupControls: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    marginBottom: '1rem',
+    gap: '0.5rem'
+  },
+  secondaryButton: {
+    backgroundColor: 'rgba(0, 173, 181, 0.2)',
+    color: palette.accent,
+    border: 'none',
+    padding: '0.5rem 1rem',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    fontWeight: '600',
+    transition: 'all 0.2s ease',
+    fontSize: '0.875rem'
+  },
+  dropIndicator: {
+    height: '2px',
+    backgroundColor: palette.accent,
+    margin: '0.25rem 0',
   }
 };
 
 function App() {
   const [notesList, setNotesList] = useState([]);
+  const [groups, setGroups] = useState([]);
   const [currentNoteId, setCurrentNoteId] = useState(null);
   const [editingNoteId, setEditingNoteId] = useState(null);
   const [editingField, setEditingField] = useState(null);
   const [editValue, setEditValue] = useState('');
-  const [draggedNoteId, setDraggedNoteId] = useState(null);
+  const [draggedItem, setDraggedItem] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [markdownContent, setMarkdownContent] = useState('');
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingNoteId, setPendingNoteId] = useState(null);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(false);
+  const [newGroupName, setNewGroupName] = useState('');
+  const [isCreatingGroup, setIsCreatingGroup] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState({});
+  const [dropTarget, setDropTarget] = useState(null);
+  const [dropPosition, setDropPosition] = useState(null);
+  const [editingGroupId, setEditingGroupId] = useState(null);
+  const [editGroupName, setEditGroupName] = useState('');
 
   useEffect(() => {
     const savedNotes = localStorage.getItem('notesList');
+    const savedGroups = localStorage.getItem('noteGroups');
     const lastOpenedNoteId = localStorage.getItem('lastOpenedNote');
+    const savedExpandedGroups = localStorage.getItem('expandedGroups');
 
     if (savedNotes) {
       try {
@@ -215,7 +291,6 @@ function App() {
             setMarkdownContent('');
           }
         } else if (parsedNotes.length > 0) {
-          // fallback to last note
           const lastNote = parsedNotes[parsedNotes.length - 1];
           setCurrentNoteId(lastNote.id);
           setMarkdownContent(lastNote.content);
@@ -233,7 +308,6 @@ function App() {
 > – Leonardo da Vinci
 `);
         }
-
       } catch (e) {
         console.error('Failed to parse notes from localStorage', e);
         setMarkdownContent(`# Welcome to Notewormy! 💎✨\n\n...`);
@@ -252,15 +326,41 @@ function App() {
 > – Leonardo da Vinci
 `);
     }
-  }, []);
 
+    if (savedGroups) {
+      try {
+        const parsedGroups = JSON.parse(savedGroups);
+        setGroups(parsedGroups);
+
+        if (savedExpandedGroups) {
+          setExpandedGroups(JSON.parse(savedExpandedGroups));
+        } else {
+          const initialExpanded = {};
+          parsedGroups.forEach(group => {
+            initialExpanded[group.id] = true;
+          });
+          setExpandedGroups(initialExpanded);
+          saveExpandedGroups(initialExpanded);
+        }
+      } catch (e) {
+        console.error('Failed to parse groups from localStorage', e);
+      }
+    }
+  }, []);
 
   const saveNotesList = useCallback((notes) => {
     localStorage.setItem('notesList', JSON.stringify(notes));
-    setNotesList(notes);
   }, []);
 
-  const addNewNote = useCallback(() => {
+  const saveGroups = useCallback((groups) => {
+    localStorage.setItem('noteGroups', JSON.stringify(groups));
+  }, []);
+
+  const saveExpandedGroups = useCallback((expanded) => {
+    localStorage.setItem('expandedGroups', JSON.stringify(expanded));
+  }, []);
+
+  const addNewNote = useCallback((groupId = null) => {
     const newNote = {
       id: Date.now(),
       title: 'New Note',
@@ -269,13 +369,43 @@ function App() {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       isTitleCustom: false,
-      isDescriptionCustom: false
+      isDescriptionCustom: false,
+      groupId: groupId
     };
-    const updatedNotes = [...notesList, newNote];
-    saveNotesList(updatedNotes);
+
+    setNotesList(prevNotes => {
+      if (groupId) {
+        const groupNotes = prevNotes.filter(n => n.groupId === groupId);
+        const firstGroupNoteIndex = prevNotes.findIndex(n => n.id === groupNotes[0]?.id);
+
+        const updatedNotes = [...prevNotes];
+        if (firstGroupNoteIndex >= 0) {
+          updatedNotes.splice(firstGroupNoteIndex, 0, newNote);
+        } else {
+          updatedNotes.push(newNote);
+        }
+        localStorage.setItem('notesList', JSON.stringify(updatedNotes));
+        return updatedNotes;
+      } else {
+
+        const updatedNotes = [...prevNotes, newNote];
+        localStorage.setItem('notesList', JSON.stringify(updatedNotes));
+        return updatedNotes;
+      }
+    });
+
     setMarkdownContent(newNote.content);
     setCurrentNoteId(newNote.id);
-  }, [notesList, saveNotesList]);
+    localStorage.setItem('lastOpenedNote', newNote.id.toString());
+
+    if (groupId) {
+      setExpandedGroups(prev => {
+        const newExpanded = { ...prev, [groupId]: true };
+        localStorage.setItem('expandedGroups', JSON.stringify(newExpanded));
+        return newExpanded;
+      });
+    }
+  }, []);
 
   const handleNoteClick = useCallback((note) => {
     if (note.id === currentNoteId) return;
@@ -312,6 +442,7 @@ function App() {
     e.stopPropagation();
     const updatedNotes = notesList.filter(n => n.id !== id);
     saveNotesList(updatedNotes);
+    setNotesList(updatedNotes);
     if (currentNoteId === id) {
       if (updatedNotes.length > 0) {
         const lastNote = updatedNotes[updatedNotes.length - 1];
@@ -321,7 +452,6 @@ function App() {
         setMarkdownContent('');
         setCurrentNoteId(null);
       }
-
     }
   }, [notesList, currentNoteId, saveNotesList]);
 
@@ -342,6 +472,7 @@ function App() {
       return note;
     });
     saveNotesList(updatedNotes);
+    setNotesList(updatedNotes);
   }, [currentNoteId, markdownContent, notesList, saveNotesList]);
 
   useEffect(() => {
@@ -383,6 +514,7 @@ function App() {
       return note;
     });
     saveNotesList(updatedNotes);
+    setNotesList(updatedNotes);
     setEditingNoteId(null);
     setEditingField(null);
     setEditValue('');
@@ -397,8 +529,8 @@ function App() {
     }
   }, [saveEdit]);
 
-  const handleDragStart = (e, id) => {
-    setDraggedNoteId(id);
+  const handleDragStart = (e, id, type) => {
+    setDraggedItem({ id, type });
     setIsDragging(true);
 
     const img = new Image();
@@ -408,29 +540,205 @@ function App() {
     e.dataTransfer.effectAllowed = 'move';
   };
 
-  const handleDragEnter = (e, targetId) => {
+  const handleDragOver = (e, targetId, type, position = null) => {
     e.preventDefault();
-    if (draggedNoteId === targetId) return;
+    setDropTarget({ id: targetId, type });
+    setDropPosition(position);
+  };
 
-    const updatedList = [...notesList];
-    const draggedIdx = updatedList.findIndex(n => n.id === draggedNoteId);
-    const targetIdx = updatedList.findIndex(n => n.id === targetId);
+  const handleDragLeave = () => {
+    setDropTarget(null);
+    setDropPosition(null);
+  };
 
-    const [draggedNote] = updatedList.splice(draggedIdx, 1);
-    updatedList.splice(targetIdx, 0, draggedNote);
+  const handleDrop = (e, targetId, type) => {
+    e.preventDefault();
 
-    setNotesList(updatedList);
+    if (!draggedItem) return;
+
+    if (draggedItem.type === 'note' && type === 'note') {
+      const draggedNote = notesList.find(n => n.id === draggedItem.id);
+      const targetNote = notesList.find(n => n.id === targetId);
+
+      if (draggedNote && targetNote && draggedNote.groupId === targetNote.groupId) {
+        const groupId = draggedNote.groupId;
+        const groupNotes = getNotesForGroup(groupId);
+
+        const updatedNotes = notesList.filter(n => n.id !== draggedItem.id);
+
+        const targetIndex = groupNotes.findIndex(n => n.id === targetId);
+
+        const insertIndex = notesList.findIndex(n => n.id === (
+          dropPosition === 'after' ?
+            groupNotes[Math.min(targetIndex + 1, groupNotes.length - 1)]?.id :
+            targetId
+        ));
+
+        const finalIndex = insertIndex >= 0 ? insertIndex : updatedNotes.length;
+
+        updatedNotes.splice(finalIndex, 0, draggedNote);
+
+        saveNotesList(updatedNotes);
+        setNotesList(updatedNotes);
+      }
+    }
+    else if (draggedItem.type === 'note' && type === 'group') {
+      moveNoteToGroup(draggedItem.id, targetId);
+    }
+    else if (draggedItem.type === 'note' && type === 'ungrouped') {
+      moveNoteToGroup(draggedItem.id, null);
+    }
+    else if (draggedItem.type === 'group' && type === 'group') {
+      const draggedIndex = groups.findIndex(g => g.id === draggedItem.id);
+      const targetIndex = groups.findIndex(g => g.id === targetId);
+
+      if (draggedIndex !== -1 && targetIndex !== -1 && draggedIndex !== targetIndex) {
+        const newGroups = [...groups];
+        const [movedGroup] = newGroups.splice(draggedIndex, 1);
+
+        const insertIndex = dropPosition === 'after' ? targetIndex + 1 : targetIndex;
+        newGroups.splice(insertIndex, 0, movedGroup);
+
+        saveGroups(newGroups);
+        setGroups(newGroups);
+      }
+    }
+
+    setDropTarget(null);
+    setDropPosition(null);
+    setDraggedItem(null);
+    setIsDragging(false);
   };
 
   const handleDragEnd = () => {
-    setDraggedNoteId(null);
+    setDropTarget(null);
+    setDropPosition(null);
+    setDraggedItem(null);
     setIsDragging(false);
-    saveNotesList(notesList);
   };
 
-  const handleDragOver = (e) => {
-    e.preventDefault();
+  const createNewGroup = () => {
+    if (!newGroupName.trim()) return;
+
+    const newGroup = {
+      id: Date.now(),
+      name: newGroupName.trim(),
+      createdAt: new Date().toISOString()
+    };
+
+    const updatedGroups = [...groups, newGroup];
+    saveGroups(updatedGroups);
+    setGroups(updatedGroups);
+    setNewGroupName('');
+    setIsCreatingGroup(false);
+
+    setExpandedGroups(prev => {
+      const newExpanded = { ...prev, [newGroup.id]: true };
+      saveExpandedGroups(newExpanded);
+      return newExpanded;
+    });
   };
+
+  const deleteGroup = (groupId, e) => {
+    e.stopPropagation();
+
+    const updatedNotes = notesList.map(note => {
+      if (note.groupId === groupId) {
+        return { ...note, groupId: null };
+      }
+      return note;
+    });
+
+    const updatedGroups = groups.filter(group => group.id !== groupId);
+
+    saveNotesList(updatedNotes);
+    saveGroups(updatedGroups);
+    setNotesList(updatedNotes);
+    setGroups(updatedGroups);
+
+    setExpandedGroups(prev => {
+      const newExpanded = { ...prev };
+      delete newExpanded[groupId];
+      return newExpanded;
+    });
+  };
+
+  const toggleGroup = (groupId) => {
+    console.log('this func was called')
+    setExpandedGroups(prev => {
+      const newExpanded = { ...prev, [groupId]: !prev[groupId] };
+      console.log(JSON.stringify(newExpanded, null, 2));
+      saveExpandedGroups(newExpanded);
+      return newExpanded;
+    });
+  };
+
+  const moveNoteToGroup = (noteId, groupId) => {
+    const updatedNotes = notesList.map(note => {
+      if (note.id === noteId) {
+        return { ...note, groupId: groupId };
+      }
+      return note;
+    });
+
+    saveNotesList(updatedNotes);
+    setNotesList(updatedNotes);
+
+    if (groupId) {
+      setExpandedGroups(prev => {
+        const newExpanded = { ...prev, [groupId]: true };
+        saveExpandedGroups(newExpanded);
+        return newExpanded;
+      });
+    }
+  };
+
+  const getNotesForGroup = (groupId) => {
+    return notesList.filter(note => note.groupId === groupId);
+  };
+
+  const getUngroupedNotes = () => {
+    return notesList.filter(note => !note.groupId);
+  };
+
+  const handleGroupClick = (groupId, e) => {
+    console.log('Group clicked:', groupId);
+    const isTitleClick = e.target.hasAttribute('data-group-title') ||
+      e.target.closest('[data-group-title]');
+
+    if (e.detail === 2 && isTitleClick) {
+      console.log('group title is editing');
+      const group = groups.find(g => g.id === groupId);
+      if (group) {
+        setEditingGroupId(groupId);
+        setEditGroupName(group.name);
+      }
+      return;
+    }
+    console.log('group is expanding/collapsing');
+
+    const isActionButton = e.target.closest('[data-group-action]');
+    if (!isActionButton) {
+      toggleGroup(groupId);
+      console.log('expanding/collapsing finished');
+    }
+  };
+
+  const saveGroupName = useCallback(() => {
+    if (!editingGroupId) return;
+
+    const updatedGroups = groups.map(group => {
+      if (group.id === editingGroupId) {
+        return { ...group, name: editGroupName };
+      }
+      return group;
+    });
+
+    saveGroups(updatedGroups);
+    setGroups(updatedGroups);
+    setEditingGroupId(null);
+    setEditGroupName('');
+  }, [editingGroupId, editGroupName, groups, saveGroups]);
 
 
   return (
@@ -463,63 +771,313 @@ function App() {
         </div>
       )}
 
-
       <main style={styles.container}>
         <div style={styles.notesListContainer}>
           <div style={styles.notesListWrapper}>
             <div className="flex justify-between items-center mb-6">
               <h2 style={styles.notesListHeader}>My Notes</h2>
-              <button style={styles.button} onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'} onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'} onClick={addNewNote}>
-                <MdOutlinePlaylistAdd style={{ height: '1.4em', width: '1.4em' }} />
-                New Note
-              </button>
             </div>
 
-            <div className="flex-1 pr-2 pt-1 pl-1 overflow-y-auto custom-scrollbar">
-              {notesList.length > 0 ? (
-                notesList.map(note => (
-                  <div
-                    key={note.id}
-                    draggable={editingNoteId !== note.id}
-                    onDragStart={(e) => handleDragStart(e, note.id)}
-                    onDragEnter={(e) => handleDragEnter(e, note.id)}
-                    onDragEnd={handleDragEnd}
-                    onDragOver={handleDragOver}
-                    className={`note-item ${isDragging && draggedNoteId === note.id ? 'grabbing' : 'grab-ready'
-                      }`}
-                    style={{
-                      ...styles.noteItem,
-                      ...(currentNoteId === note.id ? styles.activeNote : {}),
-                    }}
-                    onClick={() => handleNoteClick(note)}
-                  >
+            {isCreatingGroup && (
+              <div style={{ marginBottom: '1rem', display: 'flex', gap: '0.5rem' }}>
+                <input
+                  type="text"
+                  value={newGroupName}
+                  onChange={(e) => setNewGroupName(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && createNewGroup()}
+                  placeholder="Group name"
+                  style={styles.inputField}
+                  autoFocus
+                />
+                <button
+                  style={{ ...styles.secondaryButton, padding: '0.5rem' }}
+                  onClick={createNewGroup}
+                >
+                  Add
+                </button>
+                <button
+                  style={{ ...styles.secondaryButton, padding: '0.5rem', backgroundColor: 'rgba(255, 107, 107, 0.2)', color: palette.danger }}
+                  onClick={() => setIsCreatingGroup(false)}
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
 
-                    <div className="flex justify-between items-start gap-2">
-                      <div className="flex-1 min-w-0">
-                        {editingNoteId === note.id && editingField === 'title' ? (
-                          <input type="text" value={editValue} onChange={(e) => setEditValue(e.target.value)} onBlur={saveEdit} onKeyDown={handleEditKeyPress} autoFocus style={styles.inputField} onClick={e => e.stopPropagation()} />
-                        ) : (
-                          <h3 style={styles.noteTitle} onDoubleClick={(e) => handleDoubleClick(note.id, 'title', e)}> {note.title || 'Untitled Note'} </h3>
-                        )}
-                        {editingNoteId === note.id && editingField === 'description' ? (
-                          <input type="text" value={editValue} onChange={(e) => setEditValue(e.target.value)} onBlur={saveEdit} onKeyDown={handleEditKeyPress} autoFocus style={{ ...styles.inputField, marginTop: '4px', fontSize: '0.9rem' }} onClick={e => e.stopPropagation()} />
-                        ) : (
-                          <p style={styles.noteDescription} onDoubleClick={(e) => handleDoubleClick(note.id, 'description', e)}> {note.description || 'No description'} </p>
-                        )}
-                        <p style={styles.noteDate}> {new Date(note.updatedAt || note.createdAt).toLocaleString()} </p>
-                      </div>
-                      <button style={styles.deleteButton} onClick={(e) => deleteNote(note.id, e)} aria-label="Delete note" onMouseOver={e => e.currentTarget.style.opacity = 1} onMouseOut={e => e.currentTarget.style.opacity = 0.5}>
-                        <FaTrash />
+            <div className="flex-1 pr-2 pt-1 pl-1 overflow-y-auto custom-scrollbar">
+              {groups.length > 0 && groups.map((group, groupIndex) => (
+                <React.Fragment key={group.id}>
+                  {dropTarget?.type === 'group' && dropTarget.id === group.id && dropPosition === 'before' && (
+                    <div style={styles.dropIndicator} />
+                  )}
+
+                  <div
+                    style={styles.groupHeader}
+                    onClick={(e) => handleGroupClick(group.id, e)}
+                    onMouseOver={e => e.currentTarget.style.backgroundColor = 'rgba(0, 173, 181, 0.2)'}
+                    onMouseOut={e => e.currentTarget.style.backgroundColor = palette.groupBg}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, group.id, 'group')}
+                    onDragOver={(e) => handleDragOver(e, group.id, 'group', 'before')}
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(e, group.id, 'group')}
+                    className={draggedItem?.id === group.id && draggedItem?.type === 'group' ? 'grabbing' : ''}
+                  >
+                    {expandedGroups[group.id] ? (
+                      <FaChevronDown size={14} />
+                    ) : (
+                      <FaChevronRight size={14} />
+                    )}
+                    {expandedGroups[group.id] ? (
+                      <FaFolderOpen size={16} color={palette.accent} />
+                    ) : (
+                      <FaFolder size={16} color={palette.accent} />
+                    )}
+                    {editingGroupId === group.id ? (
+                      <input
+                        type="text"
+                        value={editGroupName}
+                        onChange={(e) => setEditGroupName(e.target.value)}
+                        onBlur={saveGroupName}
+                        onKeyDown={(e) => e.key === 'Enter' ? saveGroupName() : null}
+                        autoFocus
+                        style={styles.inputField}
+                        onClick={e => e.stopPropagation()}
+                      />
+                    ) : (
+                      <span
+                        style={styles.groupTitle}
+                        data-group-title={group.id}
+                      >
+                        {group.name}
+                      </span>
+                    )}
+                    <div style={styles.groupActions}>
+                      <button
+                        style={styles.groupActionButton}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          addNewNote(group.id);
+                        }}
+                        title="Add note to group"
+                        onMouseOver={e => e.currentTarget.style.opacity = 1}
+                        onMouseOut={e => e.currentTarget.style.opacity = 0.5}
+                        data-group-action
+                      >
+                        <FaPlus size={12} />
+                      </button>
+                      <button
+                        style={styles.groupActionButton}
+                        onClick={(e) => deleteGroup(group.id, e)}
+                        title="Delete group"
+                        onMouseOver={e => {
+                          e.currentTarget.style.opacity = 1;
+                          e.currentTarget.style.color = palette.danger;
+                        }}
+                        onMouseOut={e => {
+                          e.currentTarget.style.opacity = 0.5;
+                          e.currentTarget.style.color = palette.text;
+                        }}
+                        data-group-action
+                      >
+                        <FaTrash size={12} />
                       </button>
                     </div>
                   </div>
+
+                  {dropTarget?.type === 'group' && dropTarget.id === group.id && dropPosition === 'after' && (
+                    <div style={styles.dropIndicator} />
+                  )}
+
+                  {expandedGroups[group.id] && (
+                    <div
+                      style={{ ...styles.groupContent }}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setDropTarget({ id: group.id, type: 'group' });
+                      }}
+                      onDragLeave={handleDragLeave}
+                    >
+                      {getNotesForGroup(group.id).length > 0 && (
+                        getNotesForGroup(group.id).map((note, noteIndex) => (
+                          <React.Fragment key={note.id}>
+                            {dropTarget?.type === 'note' && dropTarget.id === note.id && dropPosition === 'before' && (
+                              <div style={styles.dropIndicator} />
+                            )}
+
+                            <div
+                              draggable={editingNoteId !== note.id}
+                              onDragStart={(e) => handleDragStart(e, note.id, 'note')}
+                              onDragOver={(e) => handleDragOver(e, note.id, 'note', 'before')}
+                              onDragLeave={handleDragLeave}
+                              onDrop={(e) => handleDrop(e, note.id, 'note')}
+                              className={`note-item ${isDragging && draggedItem?.id === note.id && draggedItem?.type === 'note' ? 'grabbing' : 'grab-ready'}`}
+                              style={{
+                                ...styles.noteItem,
+                                ...(currentNoteId === note.id ? styles.activeNote : {}),
+                              }}
+                              onClick={() => handleNoteClick(note)}
+                            >
+                              <div className="flex justify-between items-start gap-2">
+                                <div className="flex-1 min-w-0">
+                                  {editingNoteId === note.id && editingField === 'title' ? (
+                                    <input type="text" value={editValue} onChange={(e) => setEditValue(e.target.value)} onBlur={saveEdit} onKeyDown={handleEditKeyPress} autoFocus style={styles.inputField} onClick={e => e.stopPropagation()} />
+                                  ) : (
+                                    <h3 style={styles.noteTitle} onDoubleClick={(e) => handleDoubleClick(note.id, 'title', e)}> {note.title || 'Untitled Note'} </h3>
+                                  )}
+                                  {editingNoteId === note.id && editingField === 'description' ? (
+                                    <input type="text" value={editValue} onChange={(e) => setEditValue(e.target.value)} onBlur={saveEdit} onKeyDown={handleEditKeyPress} autoFocus style={{ ...styles.inputField, marginTop: '4px', fontSize: '0.9rem' }} onClick={e => e.stopPropagation()} />
+                                  ) : (
+                                    <p style={styles.noteDescription} onDoubleClick={(e) => handleDoubleClick(note.id, 'description', e)}> {note.description || 'No description'} </p>
+                                  )}
+                                  <p style={styles.noteDate}> {new Date(note.updatedAt || note.createdAt).toLocaleString()} </p>
+                                </div>
+                                <button
+                                  style={styles.deleteButton}
+                                  onClick={(e) => deleteNote(note.id, e)}
+                                  title="Delete note"
+                                  onMouseOver={e => e.currentTarget.style.opacity = 1}
+                                  onMouseOut={e => e.currentTarget.style.opacity = 0.5}
+                                >
+                                  <FaTrash size={12} />
+                                </button>
+                              </div>
+                            </div>
+
+                            {dropTarget?.type === 'note' && dropTarget.id === note.id && dropPosition === 'after' && (
+                              <div style={styles.dropIndicator} />
+                            )}
+                          </React.Fragment>
+                        ))
+                      )}
+                      {getNotesForGroup(group.id).length === 0 && (
+                        <div
+                          style={{
+                            padding: '0.5rem',
+                            textAlign: 'center',
+                            color: palette.text,
+                            opacity: 0.5,
+                            fontSize: '0.875rem'
+                          }}
+                          onDragOver={(e) => {
+                            e.preventDefault();
+                            setDropTarget({ id: group.id, type: 'group' });
+                          }}
+                          onDragLeave={handleDragLeave}
+                          onDrop={(e) => handleDrop(e, group.id, 'group')}
+                        >
+                          No notes in this group. <br /> Drop notes here or add new ones.
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </React.Fragment>
+              ))}
+
+              {groups.length > 0 && dropTarget?.type === 'group' && dropTarget.id === groups[groups.length - 1].id && dropPosition === 'after' && (
+                <div style={styles.dropIndicator} />
+              )}
+
+              <div
+                style={{
+                  ...styles.groupHeader,
+                  backgroundColor: 'transparent',
+                  paddingLeft: '0.5rem',
+                  marginBottom: '0.25rem'
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDropTarget({ id: null, type: 'ungrouped' });
+                }}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, null, 'ungrouped')}
+              >
+                <span>Ungrouped Notes</span>
+              </div>
+
+              {dropTarget?.type === 'ungrouped' && (
+                <div style={styles.dropIndicator} />
+              )}
+
+              {getUngroupedNotes().length > 0 && (
+                getUngroupedNotes().map((note, index) => (
+                  <React.Fragment key={note.id}>
+                    {dropTarget?.type === 'note' && dropTarget.id === note.id && dropPosition === 'before' && (
+                      <div style={styles.dropIndicator} />
+                    )}
+
+                    <div
+                      draggable={editingNoteId !== note.id}
+                      onDragStart={(e) => handleDragStart(e, note.id, 'note')}
+                      onDragOver={(e) => handleDragOver(e, note.id, 'note', 'before')}
+                      onDragLeave={handleDragLeave}
+                      onDrop={(e) => handleDrop(e, note.id, 'note')}
+                      className={`note-item ${isDragging && draggedItem?.id === note.id && draggedItem?.type === 'note' ? 'grabbing' : 'grab-ready'}`}
+                      style={{
+                        ...styles.noteItem,
+                        ...(currentNoteId === note.id ? styles.activeNote : {}),
+                      }}
+                      onClick={() => handleNoteClick(note)}
+                    >
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="flex-1 min-w-0">
+                          {editingNoteId === note.id && editingField === 'title' ? (
+                            <input type="text" value={editValue} onChange={(e) => setEditValue(e.target.value)} onBlur={saveEdit} onKeyDown={handleEditKeyPress} autoFocus style={styles.inputField} onClick={e => e.stopPropagation()} />
+                          ) : (
+                            <h3 style={styles.noteTitle} onDoubleClick={(e) => handleDoubleClick(note.id, 'title', e)}> {note.title || 'Untitled Note'} </h3>
+                          )}
+                          {editingNoteId === note.id && editingField === 'description' ? (
+                            <input type="text" value={editValue} onChange={(e) => setEditValue(e.target.value)} onBlur={saveEdit} onKeyDown={handleEditKeyPress} autoFocus style={{ ...styles.inputField, marginTop: '4px', fontSize: '0.9rem' }} onClick={e => e.stopPropagation()} />
+                          ) : (
+                            <p style={styles.noteDescription} onDoubleClick={(e) => handleDoubleClick(note.id, 'description', e)}> {note.description || 'No description'} </p>
+                          )}
+                          <p style={styles.noteDate}> {new Date(note.updatedAt || note.createdAt).toLocaleString()} </p>
+                        </div>
+                        <button
+                          style={styles.deleteButton}
+                          onClick={(e) => deleteNote(note.id, e)}
+                          title="Delete note"
+                          onMouseOver={e => e.currentTarget.style.opacity = 1}
+                          onMouseOut={e => e.currentTarget.style.opacity = 0.5}
+                        >
+                          <FaTrash size={12} />
+                        </button>
+                      </div>
+                    </div>
+
+                    {dropTarget?.type === 'note' && dropTarget.id === note.id && dropPosition === 'after' && (
+                      <div style={styles.dropIndicator} />
+                    )}
+                  </React.Fragment>
                 ))
-              ) : (
+              )}
+
+              {notesList.length === 0 && (
                 <div className="text-center py-10" style={{ color: palette.text, opacity: 0.5 }}>
                   No notes yet. <br /> Click "New Note" to begin.
                 </div>
               )}
+
             </div>
+
+          </div>
+          <div className="flex justify-center p-4 border-t gap-4" style={{ borderColor: palette.darkBg }}>
+            <button
+              style={styles.button}
+              onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'}
+              onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
+              onClick={() => addNewNote()}>
+              <MdOutlinePlaylistAdd style={{ height: '1.4em', width: '1.4em' }} />
+              New Note
+            </button>
+            <button
+              style={{ ...styles.button, backgroundColor: 'rgba(0, 173, 181)' }}
+              onClick={() => setIsCreatingGroup(true)}
+              onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'}
+              onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
+            >
+              <FaPlus style={{ height: '1em', width: '1em' }} /> New Group
+            </button>
           </div>
         </div>
 
@@ -584,7 +1142,6 @@ function App() {
         <p> {new Date().getFullYear()} Notewormy</p>
         <p>Powered by <a href="https://github.com/advre617">Nikita Rulevics</a></p>
         <span className='flex flex-row gap-2 items-center justify-center'> With <FaHeart /> for your notes</span>
-
       </footer>
     </div>
   )
